@@ -29,7 +29,8 @@ namespace TP1
 
             _vertices = new List<WingedEdge.Vertex>(mesh.vertexCount);
             _edges = new List<WingedEdge>(mesh.vertexCount * 3);
-            _faces = new List<WingedEdge.Face>(mesh.vertexCount / 3);
+            int triangleCount = mesh.GetIndices(0).Length / 3;
+            _faces = new List<WingedEdge.Face>(triangleCount);
 
             BuildVertices(mesh.vertices);
             BuildTopology(mesh.GetIndices(0));
@@ -141,6 +142,8 @@ namespace TP1
                         "Plus de deux faces partagent cette arête.");
                 
                 existingOpposite.leftFace = rightFace;
+                
+                rightFace.edge ??= existingOpposite;
                 
                 _remainingEdges.Remove(revKey);
                 

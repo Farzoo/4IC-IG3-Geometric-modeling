@@ -10,6 +10,8 @@ namespace TP1
         private MeshType previousMeshType;
         
         public Vector3 boxHalfSize = Vector3.one * 0.5f;
+        
+        public WingedEdgeDebugger wingedEdgeDebugger;
 
         private MeshFilter meshFilter;
         private IMeshMaker currentMeshMaker;
@@ -22,7 +24,7 @@ namespace TP1
                 Debug.LogError("MeshFilter component is missing.");
                 return;
             }
-
+            
             GenerateMesh();
         }
 
@@ -33,20 +35,26 @@ namespace TP1
             if (currentMeshMaker == null) return;
             
             Mesh newMesh = currentMeshMaker.Create();
-            if (newMesh != null)
-            {
-                if (meshFilter.sharedMesh != null &&
-                    meshFilter.sharedMesh.name.StartsWith(meshTypeToCreate.ToString()))
-                {
-                    Destroy(meshFilter.sharedMesh);
-                }
-
-                meshFilter.mesh = newMesh;
-                Debug.Log(meshTypeToCreate + " mesh created successfully.");
-            }
-            else
+            if (newMesh == null)
             {
                 Debug.LogError("Failed to create mesh with " + meshTypeToCreate + " maker.");
+                return;
+            }
+
+            if (meshFilter.sharedMesh != null &&
+                meshFilter.sharedMesh.name.StartsWith(meshTypeToCreate.ToString()))
+            {
+                Destroy(meshFilter.sharedMesh);
+            }
+
+            meshFilter.sharedMesh = newMesh;
+            Debug.Log(meshTypeToCreate + " mesh created successfully.");
+
+            var wingedEdgeMesh = new WingedEdgeMesh(newMesh);
+            
+            if (wingedEdgeDebugger != null)
+            {
+                wingedEdgeDebugger.SetTarget(wingedEdgeMesh);
             }
         }
 
