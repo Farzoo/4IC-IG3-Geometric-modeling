@@ -29,8 +29,18 @@ namespace TP1
             GenerateMesh();
         }
 
-        private void GenerateMesh()
+        public void GenerateMesh()
         {
+            if (meshFilter == null)
+            {
+                meshFilter = GetComponent<MeshFilter>();
+                if (meshFilter == null)
+                {
+                    Debug.LogError("MeshFilter component is missing.");
+                    return;
+                }
+            }
+            
             currentMeshMaker = meshTypeToCreate.CreateMeshMaker(boxHalfSize);
             
             if (currentMeshMaker == null) return;
@@ -45,7 +55,7 @@ namespace TP1
             if (meshFilter.sharedMesh != null &&
                 meshFilter.sharedMesh.name.StartsWith(meshTypeToCreate.ToString()))
             {
-                Destroy(meshFilter.sharedMesh);
+                DestroyImmediate(meshFilter.sharedMesh);
             }
 
             meshFilter.sharedMesh = newMesh;
@@ -54,20 +64,13 @@ namespace TP1
             var wingedEdgeMesh = new WingedEdgeMesh(newMesh); 
             
             wingedEdgeMesh = wingedEdgeMesh.SubdivideCatmullClark();
-            /*StringBuilder debugInfo = new StringBuilder();
-            foreach (var edge in wingedEdgeMesh.Edges)
-            {
-                debugInfo.AppendLine(edge.ToString());
-            }
-            
-            Debug.Log(debugInfo.ToString());*/
             
             if (wingedEdgeDebugger != null)
             {
                 wingedEdgeDebugger.SetTarget(wingedEdgeMesh);
             }
         }
-
+        
         private void OnValidate()
         {
             if (meshFilter == null)

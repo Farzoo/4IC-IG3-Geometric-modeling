@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using Vertex = TP1.WingedEdge.Vertex;
+using Face = TP1.WingedEdge.Face;
 
 namespace TP1
 {
