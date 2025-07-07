@@ -33,7 +33,15 @@ namespace TP1
             _faces = new List<WingedEdge.Face>(triangleCount);
 
             BuildVertices(mesh.vertices);
-            BuildTopology(mesh.GetIndices(0));
+
+            int verticesPerFace = mesh.GetTopology(0) switch
+            {
+                MeshTopology.Triangles => 3,
+                MeshTopology.Quads => 4,
+                _ => throw new ArgumentException("Unsupported mesh topology. Only Triangles and Quads are supported.")
+            };
+
+            BuildTopology(mesh.GetIndices(0), verticesPerFace);
             WeaveMeshBorders();
         }
 
@@ -48,8 +56,8 @@ namespace TP1
                     throw new ArgumentException("Mesh must contain at least one submesh.");
             }
 
-            if (mesh.GetTopology(0) != MeshTopology.Triangles)
-                throw new ArgumentException("Mesh must be of type Triangles.");
+            //if (mesh.GetTopology(0) != MeshTopology.Triangles)
+                //throw new ArgumentException("Mesh must be of type Triangles.");
         }
 
         private void BuildVertices(Vector3[] positions)
@@ -58,60 +66,50 @@ namespace TP1
                 _vertices.Add(new WingedEdge.Vertex(i, positions[i], null));
         }
 
-        private void BuildTopology(int[] indices)
+        private void BuildTopology(int[] indices, int vertsPerFace)
         {
-            for (int t = 0; t < indices.Length; t += 3)
-            {
-                var v0 = _vertices[indices[t]];
-                var v1 = _vertices[indices[t+1]];
-                var v2 = _vertices[indices[t+2]];
+            if (indices.Length % vertsPerFace != 0)
+                throw new ArgumentException($"La longueur des indices ({indices.Length}) n'est pas un multiple de {vertsPerFace}. " +
+                                            "Maillage incomplet ou mal formé.");
+            
+            (WingedEdge edge, bool isNew)[] edgesInFace = new (WingedEdge, bool)[vertsPerFace];
+            int faceCount = indices.Length / vertsPerFace;
 
-                var face = new WingedEdge.Face(t / 3, null);
+            for (int f = 0; f < faceCount; ++f)
+            {
+                int baseIdx = f * vertsPerFace;
+                var face = new WingedEdge.Face(f, null);
                 _faces.Add(face);
 
-                var e0 = GetOrCreateEdge(v0, v1, face, out var e0IsNew);
-                var e1 = GetOrCreateEdge(v1, v2, face, out var e1IsNew);
-                var e2 = GetOrCreateEdge(v2, v0, face, out var e2IsNew);
+                for (int i = 0; i < vertsPerFace; ++i)
+                {
+                    int i0 = indices[baseIdx + i];
+                    int i1 = indices[baseIdx + (i + 1) % vertsPerFace];
+                    edgesInFace[i].edge = GetOrCreateEdge(
+                        _vertices[i0], _vertices[i1], // start -> end (CW)
+                        face,
+                        out edgesInFace[i].isNew);
+                }
 
-                if (e0IsNew)
+                // Maillage local des wings
+                for (int i = 0; i < vertsPerFace; ++i)
                 {
-                    face.edge = e0;
-                    // Wings locales au triangle pour l'instant
-                    e0.startCWEdge = e2;
-                    e0.endCCWEdge = e1;
+                    int prev = (i - 1 + vertsPerFace) % vertsPerFace;
+                    int next = (i + 1) % vertsPerFace;
+                    var e = edgesInFace[i].edge;
 
-                }
-                else
-                {
-                    e0.startCCWEdge = e1;
-                    e0.endCWEdge = e2;
-                    e0.leftFace = face;
-                }
-                
-                if (e1IsNew)
-                {
-                    // Wings locales au triangle pour l'instant
-                    e1.startCWEdge = e0;
-                    e1.endCCWEdge = e2;
-                }
-                else
-                {
-                    e1.startCCWEdge = e2;
-                    e1.endCWEdge = e0;
-                    e1.leftFace = face;
-                }
-                
-                if (e2IsNew)
-                {
-                    // Wings locales au triangle pour l'instant
-                    e2.startCWEdge = e1;
-                    e2.endCCWEdge = e0;
-                }
-                else
-                {
-                    e2.startCCWEdge = e0;
-                    e2.endCWEdge = e1;
-                    e2.leftFace = face;
+                    if (edgesInFace[i].isNew)
+                    {
+                        e.startCWEdge = edgesInFace[prev].edge;
+                        e.endCCWEdge = edgesInFace[next].edge;
+                        face.edge ??= e;
+                    }
+                    else // On vient de rencontrer l’arête opposée
+                    {
+                        e.startCCWEdge = edgesInFace[next].edge;
+                        e.endCWEdge = edgesInFace[prev].edge;
+                        e.leftFace = face;
+                    }
                 }
             }
         }
@@ -122,7 +120,7 @@ namespace TP1
                                            out bool isNewEdge)
         {
             isNewEdge = false;
-            // Dans notre cas, un maillage 2‑manifold ne peut pas avoir deux arêtes avec les mêmes sommets et qui ont la même direction.
+            // Dans notre cas, un maillage 2-manifold ne peut pas avoir deux arêtes avec les mêmes sommets et qui ont la même direction.
             var key = (start.index, end.index);
             if (_edgeMap.TryGetValue(key, out var existingSameDir))
             {

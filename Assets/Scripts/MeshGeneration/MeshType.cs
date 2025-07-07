@@ -7,6 +7,7 @@ namespace TP1
         Box,
         Chips,
         Pyramid,
+        QuadBox,
     }
 
     public static class MeshTypeFactory
@@ -18,6 +19,7 @@ namespace TP1
                 MeshType.Box => new BoxMaker(halfSize),
                 MeshType.Chips => new Chips(halfSize),
                 MeshType.Pyramid => new PyramidMaker(),
+                MeshType.QuadBox => new QuadBoxMaker(halfSize),
                 _ => throw new System.NotSupportedException($"MeshType {meshType} is not supported.")
             };
         }
