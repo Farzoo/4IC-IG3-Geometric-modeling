@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-namespace TP1
+namespace WingedEdge
 {
     [CustomEditor(typeof(MeshBehaviour)), CanEditMultipleObjects]
     public class MeshBehaviourEditor : Editor

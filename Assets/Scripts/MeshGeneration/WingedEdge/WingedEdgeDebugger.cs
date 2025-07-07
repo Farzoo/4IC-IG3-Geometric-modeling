@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEditor;
 #endif
 
-namespace TP1
+namespace WingedEdge
 {
     /// <summary>
     /// Affiche la géométrie et la topologie de base d'un WingedEdgeMesh.
@@ -111,12 +111,12 @@ namespace TP1
             }
         }
 
-        private Vector3 GetFaceCentroid(WingedEdge.Face face)
+        private Vector3 GetFaceCentroid(Face face)
         {
             Vector3 centroid = Vector3.zero;
             if (face.edge == null) return centroid;
 
-            var verticesOfFace = new List<WingedEdge.Vertex>();
+            var verticesOfFace = new List<Vertex>();
             WingedEdge startEdge = face.edge;
             WingedEdge currentEdge = startEdge;
             

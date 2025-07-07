@@ -1,8 +1,8 @@
-﻿using System;
-using System.Text;
+﻿using System.Linq;
+using TP1;
 using UnityEngine;
 
-namespace TP1
+namespace WingedEdge
 {
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class MeshBehaviour : MonoBehaviour
@@ -16,6 +16,8 @@ namespace TP1
 
         private MeshFilter meshFilter;
         private IMeshMaker currentMeshMaker;
+        
+        private WingedEdgeMesh.WingedEdgeMeshBuilder wingedEdgeMeshBuilder = new();
 
         void Start()
         {
@@ -61,13 +63,23 @@ namespace TP1
             meshFilter.sharedMesh = newMesh;
             Debug.Log(meshTypeToCreate + " mesh created successfully.");
 
-            var wingedEdgeMesh = new WingedEdgeMesh(newMesh); 
+            var wingedEdgeMesh = wingedEdgeMeshBuilder.CreateFrom(meshFilter.sharedMesh);
             
-            wingedEdgeMesh = wingedEdgeMesh.SubdivideCatmullClark();
+            //wingedEdgeMesh.SubdivideCatmullClark();
             
             if (wingedEdgeDebugger != null)
             {
                 wingedEdgeDebugger.SetTarget(wingedEdgeMesh);
+            }
+
+            foreach (var face in wingedEdgeMesh.Faces)
+            {
+                var edgesOfFace = face.FaceEdges.ToList();
+            }
+            
+            foreach (var vertex in wingedEdgeMesh.Vertices)
+            {
+                var edgesOfVertex = vertex.IncidentEdges.ToList();
             }
         }
         
