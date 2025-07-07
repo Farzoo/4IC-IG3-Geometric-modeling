@@ -223,6 +223,271 @@ namespace TP1
                 // A voir si on veut mettre à jour la face gauche de l'arête de bordure.
             }
         }
+        
+        #region Catmull-Clark Subdivision
+
+        /// <summary>
+        /// Applique une itération de l'algorithme de subdivision de Catmull-Clark.
+        /// </summary>
+        /// <returns>Un nouveau WingedEdgeMesh représentant le maillage subdivisé.</returns>
+        public WingedEdgeMesh SubdivideCatmullClark()
+        {
+            // Étape 1: Calculer la position de tous les nouveaux points sans modifier la topologie.
+            CatmullClarkCreateNewPoints(
+                out var facePoints, 
+                out var edgePoints, 
+                out var newVertexPositions);
+
+            // Étape 2 & 3: Construire la nouvelle topologie (nouveaux sommets, faces et arêtes).
+            // La stratégie la plus simple est de créer un nouveau Mesh Unity et de l'utiliser
+            // pour construire un nouveau WingedEdgeMesh.
+
+            var subdividedMesh = new Mesh { name = "Subdivided_" + (_faces.Count > 0 ? _faces[0].GetType().Name : "Mesh") };
+
+            var newVertices = new List<Vector3>();
+            var newIndices = new List<int>();
+
+            // Les nouveaux sommets sont composés des anciens sommets (déplacés),
+            // des edge points et des face points.
+            // On garde une trace des indices de départ pour chaque type de point.
+            int originalVertexCount = _vertices.Count;
+            int edgePointVertexStartIndex = originalVertexCount;
+            int facePointVertexStartIndex = edgePointVertexStartIndex + _edges.Count;
+
+            newVertices.AddRange(newVertexPositions);
+            newVertices.AddRange(edgePoints);
+            newVertices.AddRange(facePoints);
+
+            // Pour chaque face originale, on crée N nouvelles faces (où N est le nombre de sommets de la face).
+            // Chaque nouvelle face est un quad.
+            foreach (var face in _faces)
+            {
+                var verticesOfFace = GetVerticesOfFace(face);
+                int faceVertexCount = verticesOfFace.Count;
+                if (faceVertexCount < 3) continue;
+
+                int facePointIndex = facePointVertexStartIndex + face.index;
+
+                for (int i = 0; i < faceVertexCount; i++)
+                {
+                    var currentVertex = verticesOfFace[i];
+                    var nextVertex = verticesOfFace[(i + 1) % faceVertexCount];
+
+                    // On trouve les arêtes qui relient les sommets de la face
+                    var edgeAfter = FindEdge(currentVertex, nextVertex);
+                    var edgeBefore = FindEdge(verticesOfFace[(i - 1 + faceVertexCount) % faceVertexCount], currentVertex);
+
+                    if (edgeAfter == null || edgeBefore == null)
+                    {
+                        Debug.LogError("Could not find edge for face construction. Topology might be corrupted.");
+                        continue;
+                    }
+                    
+                    int edgePointAfterIndex = edgePointVertexStartIndex + edgeAfter.index;
+                    int edgePointBeforeIndex = edgePointVertexStartIndex + edgeBefore.index;
+
+                    // Création du nouveau quad. L'ordre est crucial pour avoir une normale correcte.
+                    // Sommet -> EdgePoint d'après -> FacePoint -> EdgePoint d'avant
+                    newIndices.Add(currentVertex.index);
+                    newIndices.Add(edgePointAfterIndex);
+                    newIndices.Add(facePointIndex);
+                    newIndices.Add(edgePointBeforeIndex);
+                }
+            }
+
+            subdividedMesh.SetVertices(newVertices);
+            subdividedMesh.SetIndices(newIndices, MeshTopology.Quads, 0);
+            subdividedMesh.RecalculateNormals();
+            subdividedMesh.RecalculateBounds();
+
+            // On crée le WingedEdgeMesh final à partir du maillage Unity qu'on vient de construire.
+            return new WingedEdgeMesh(subdividedMesh);
+        }
+
+        /// <summary>
+        /// Calcule les positions des face points, edge points et des nouveaux sommets
+        /// selon les règles de Catmull-Clark.
+        /// </summary>
+        private void CatmullClarkCreateNewPoints(
+            out List<Vector3> facePoints, 
+            out List<Vector3> edgePoints, 
+            out List<Vector3> newVertexPositions)
+        {
+            // Initialisation des listes de sortie
+            facePoints = new List<Vector3>(_faces.Count);
+            edgePoints = new List<Vector3>(_edges.Count);
+            newVertexPositions = new List<Vector3>(_vertices.Count);
+
+            // 1. Calculer les "Face Points" (centroïde de chaque face)
+            foreach (var face in _faces)
+            {
+                var verticesOfFace = GetVerticesOfFace(face);
+                Vector3 centroid = Vector3.zero;
+                foreach (var v in verticesOfFace)
+                {
+                    centroid += v.position;
+                }
+                facePoints.Add(centroid / verticesOfFace.Count);
+            }
+
+            // 2. Calculer les "Edge Points"
+            foreach (var edge in _edges)
+            {
+                // Cas d'une arête de bordure
+                if (edge.leftFace == null)
+                {
+                    edgePoints.Add((edge.startVertex.position + edge.endVertex.position) * 0.5f);
+                }
+                // Cas d'une arête intérieure
+                else
+                {
+                    Vector3 edgePoint = (edge.startVertex.position + edge.endVertex.position +
+                                         facePoints[edge.rightFace.index] + facePoints[edge.leftFace.index]) * 0.25f;
+                    edgePoints.Add(edgePoint);
+                }
+            }
+
+            // 3. Calculer les nouvelles positions des sommets originaux
+            foreach (var vertex in _vertices)
+            {
+                var incidentEdges = GetIncidentEdges(vertex);
+                int n = incidentEdges.Count;
+                if (n == 0)
+                {
+                    newVertexPositions.Add(vertex.position); // Sommet isolé
+                    continue;
+                }
+
+                // Détecter si le sommet est sur une bordure
+                bool isBoundaryVertex = incidentEdges.Exists(e => e.leftFace == null);
+
+                if (isBoundaryVertex)
+                {
+                    Vector3 newPos = Vector3.zero;
+                    int boundaryEdgeCount = 0;
+                    foreach (var edge in incidentEdges)
+                    {
+                        if (edge.leftFace == null) // C'est une arête de bordure
+                        {
+                            newPos += (edge.startVertex.position + edge.endVertex.position) * 0.5f; // Midpoint
+                            boundaryEdgeCount++;
+                        }
+                    }
+                    
+                    if (boundaryEdgeCount == 2) // Cas standard pour un sommet de bordure
+                    {
+                        newPos = (newPos + vertex.position) / 3.0f;
+                    }
+                    else // Cas d'un "coin" ou autre situation complexe, on se contente de ne pas le bouger
+                    {
+                        newPos = vertex.position;
+                    }
+                    newVertexPositions.Add(newPos);
+                }
+                else // Cas d'un sommet intérieur
+                {
+                    // Q = moyenne des face points des faces adjacentes
+                    var adjacentFaces = GetAdjacentFaces(vertex);
+                    Vector3 Q = Vector3.zero;
+                    foreach (var face in adjacentFaces)
+                    {
+                        Q += facePoints[face.index];
+                    }
+                    Q /= adjacentFaces.Count;
+
+                    // R = moyenne des mid-points des arêtes incidentes
+                    Vector3 R = Vector3.zero;
+                    foreach (var edge in incidentEdges)
+                    {
+                        R += (edge.startVertex.position + edge.endVertex.position) * 0.5f;
+                    }
+                    R /= n;
+
+                    // Appliquer la formule
+                    Vector3 V = vertex.position;
+                    newVertexPositions.Add((Q + 2.0f * R + (n - 3.0f) * V) / n);
+                }
+            }
+        }
+
+        // --- Méthodes utilitaires pour la topologie ---
+
+        public List<WingedEdge.Vertex> GetVerticesOfFace(WingedEdge.Face face)
+        {
+            var vertices = new List<WingedEdge.Vertex>();
+            if (face.edge == null) return vertices;
+
+            WingedEdge startEdge = face.edge;
+            WingedEdge currentEdge = startEdge;
+            do
+            {
+                if (currentEdge.rightFace == face)
+                {
+                    vertices.Add(currentEdge.startVertex);
+                    currentEdge = currentEdge.endCCWEdge;
+                }
+                else // La face est à gauche
+                {
+                    vertices.Add(currentEdge.endVertex);
+                    currentEdge = currentEdge.startCCWEdge;
+                }
+                if (currentEdge == null) break; // Bordure
+            } while (currentEdge != startEdge);
+            
+            return vertices;
+        }
+
+        public List<WingedEdge> GetIncidentEdges(WingedEdge.Vertex vertex)
+        {
+            var edges = new List<WingedEdge>();
+            if (vertex.edge == null) return edges;
+
+            WingedEdge startEdge = vertex.edge;
+            WingedEdge currentEdge = startEdge;
+            
+            // Parcourir les arêtes autour du sommet dans un sens (CCW)
+            do
+            {
+                edges.Add(currentEdge);
+                currentEdge = (currentEdge.startVertex == vertex) ? currentEdge.startCCWEdge : currentEdge.endCCWEdge;
+            } while (currentEdge != startEdge && currentEdge != null);
+
+            // Si on a atteint une bordure, il faut repartir dans l'autre sens (CW)
+            if (currentEdge == null)
+            {
+                currentEdge = (startEdge.startVertex == vertex) ? startEdge.startCWEdge : startEdge.endCWEdge;
+                while (currentEdge != null)
+                {
+                    edges.Add(currentEdge);
+                    currentEdge = (currentEdge.startVertex == vertex) ? currentEdge.startCWEdge : currentEdge.endCWEdge;
+                }
+            }
+            return edges;
+        }
+
+        public List<WingedEdge.Face> GetAdjacentFaces(WingedEdge.Vertex vertex)
+        {
+            var faces = new List<WingedEdge.Face>();
+            foreach (var edge in GetIncidentEdges(vertex))
+            {
+                if (edge.rightFace != null && !faces.Contains(edge.rightFace))
+                    faces.Add(edge.rightFace);
+                if (edge.leftFace != null && !faces.Contains(edge.leftFace))
+                    faces.Add(edge.leftFace);
+            }
+            return faces;
+        }
+
+        private WingedEdge FindEdge(WingedEdge.Vertex v1, WingedEdge.Vertex v2)
+        {
+            if (_edgeMap.TryGetValue((v1.index, v2.index), out var edge))
+                return edge;
+            if (_edgeMap.TryGetValue((v2.index, v1.index), out edge))
+                return edge;
+            return null;
+        }
+
+        #endregion
     }
     public class WingedEdge
     {

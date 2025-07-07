@@ -217,19 +217,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!43 &877205768
+--- !u!43 &909288402
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Chips mesh (subdivided 2x)
+  m_Name: QuadBox
   serializedVersion: 11
   m_SubMeshes:
   - serializedVersion: 2
     firstByte: 0
-    indexCount: 18
-    topology: 0
+    indexCount: 24
+    topology: 2
     baseVertex: 0
     firstVertex: 0
     vertexCount: 8
@@ -252,7 +252,7 @@ Mesh:
   m_KeepVertices: 1
   m_KeepIndices: 1
   m_IndexFormat: 0
-  m_IndexBuffer: 020007000600020003000700000004000700000007000300010002000600010006000500
+  m_IndexBuffer: 000003000200010004000500060007000000010005000400020003000700060000000400070003000100020006000500
   m_VertexData:
     serializedVersion: 3
     m_VertexCount: 8
@@ -314,7 +314,7 @@ Mesh:
       format: 0
       dimension: 0
     m_DataSize: 192
-    _typelessdata: 000000bf000000bf000000bf000080bf00000000000000000000003f000000bf000000bf0000803f00000000000000000000003f0000003f000000bf2ef9e43e2ef9643f00000000000000bf0000003f000000bff30435bff304353f00000000000000bf000000bf0000003f000080bf00000000000000000000003f000000bf0000003f0000803f00000000000000000000003f0000003f0000003f2ef9643f2ef9e43e00000000000000bf0000003f0000003ff30435bff304353f00000000
+    _typelessdata: 000000bf000000bf000000bf3acd13bf3acd13bf3acd13bf0000003f000000bf000000bfeb05513feb05d1beeb05d1be0000003f0000003f000000bfabaaaa3eabaa2a3fabaa2abf000000bf0000003f000000bf3acd13bf3acd133f3acd13bf000000bf000000bf0000003feb05d1beeb05d1beeb05513f0000003f000000bf0000003feb05d13eeb0551bfeb05d13e0000003f0000003f0000003fabaa2a3fabaaaa3eabaa2a3f000000bf0000003f0000003fabaa2abfabaa2a3fabaaaa3e
   m_CompressedMesh:
     m_Vertices:
       m_NumItems: 0
@@ -487,6 +487,7 @@ GameObject:
   - component: {fileID: 1027560995}
   - component: {fileID: 1027560994}
   - component: {fileID: 1027560998}
+  - component: {fileID: 1027560999}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -506,10 +507,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a8bc63985c94191b3e3d45e882285ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  meshTypeToCreate: 1
+  meshTypeToCreate: 3
   boxHalfSize: {x: 0.5, y: 0.5, z: 0.5}
-  subdivisionIterations: 2
-  wingedEdgeDebugger: {fileID: 0}
+  wingedEdgeDebugger: {fileID: 1027560999}
 --- !u!23 &1027560995
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -559,7 +559,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1027560992}
-  m_Mesh: {fileID: 877205768}
+  m_Mesh: {fileID: 909288402}
 --- !u!4 &1027560997
 Transform:
   m_ObjectHideFlags: 0
@@ -582,7 +582,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1027560992}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f89221c9f037417ab88cb4d52d4ec5e8, type: 3}
   m_Name: 
@@ -595,6 +595,29 @@ MonoBehaviour:
   arrowHeadLength: 0.04
   arrowHeadAngle: 25
   labelOffset: {x: 0, y: 0.02, z: 0}
+--- !u!114 &1027560999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1027560992}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c778184dc5eb469b9d6e93ee932590da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  showVertices: 1
+  showEdges: 1
+  showFaces: 1
+  showVertexIds: 1
+  showEdgeIds: 1
+  showFaceIds: 1
+  vertexRadius: 0.03
+  labelOffset: {x: 0, y: 0.05, z: 0}
+  vertexColor: {r: 1, g: 0, b: 0, a: 1}
+  edgeColor: {r: 0, g: 0, b: 0, a: 1}
+  faceIdColor: {r: 0.1, g: 0.1, b: 0.1, a: 0.8}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

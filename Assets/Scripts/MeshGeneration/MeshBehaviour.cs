@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using UnityEngine;
 
 namespace TP1
@@ -50,7 +51,16 @@ namespace TP1
             meshFilter.sharedMesh = newMesh;
             Debug.Log(meshTypeToCreate + " mesh created successfully.");
 
-            var wingedEdgeMesh = new WingedEdgeMesh(newMesh);
+            var wingedEdgeMesh = new WingedEdgeMesh(newMesh); 
+            
+            wingedEdgeMesh = wingedEdgeMesh.SubdivideCatmullClark();
+            /*StringBuilder debugInfo = new StringBuilder();
+            foreach (var edge in wingedEdgeMesh.Edges)
+            {
+                debugInfo.AppendLine(edge.ToString());
+            }
+            
+            Debug.Log(debugInfo.ToString());*/
             
             if (wingedEdgeDebugger != null)
             {
