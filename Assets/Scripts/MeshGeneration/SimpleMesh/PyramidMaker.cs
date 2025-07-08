@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace TP1
+namespace MeshGeneration.SimpleMesh
 {
     public class PyramidMaker : IMeshMaker
     {
@@ -17,9 +17,12 @@ namespace TP1
                 new Vector3(0, 0 , 0),
                 new Vector3(0.5f, 0, 1),
                 new Vector3(1, 0, 0),
+                
                 new Vector3(-0.5f, 0, 1),
                 new Vector3(0, 0, 2),
                 new Vector3(-1, 0, 0),
+                
+                new Vector3(1.5f, 0, 0.5f)
                 
                 //new Vector3(0.25f, 1, -1),
                 //new Vector3(1f, 1, -1),
@@ -32,6 +35,8 @@ namespace TP1
                 1, 3, 4,
                 0, 5, 3,
                 0, 3, 1,
+                
+                1, 6, 2
                 
                 // Anormal
                 //6, 0, 7

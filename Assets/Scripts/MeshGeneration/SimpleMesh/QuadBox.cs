@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace TP1
+namespace MeshGeneration.SimpleMesh
 {
     public class QuadBoxMaker : IMeshMaker
     {
@@ -20,14 +20,14 @@ namespace TP1
             
             Vector3[] vertices =
             {
-                new Vector3(-halfSize.x, -halfSize.y, -halfSize.z), // 0
-                new Vector3( halfSize.x, -halfSize.y, -halfSize.z), // 1
-                new Vector3( halfSize.x,  halfSize.y, -halfSize.z), // 2
-                new Vector3(-halfSize.x,  halfSize.y, -halfSize.z), // 3
-                new Vector3(-halfSize.x, -halfSize.y,  halfSize.z), // 4
-                new Vector3( halfSize.x, -halfSize.y,  halfSize.z), // 5
-                new Vector3( halfSize.x,  halfSize.y,  halfSize.z), // 6
-                new Vector3(-halfSize.x,  halfSize.y,  halfSize.z)  // 7
+                new Vector3(-halfSize.x, -halfSize.y, -halfSize.z),
+                new Vector3( halfSize.x, -halfSize.y, -halfSize.z),
+                new Vector3( halfSize.x,  halfSize.y, -halfSize.z),
+                new Vector3(-halfSize.x,  halfSize.y, -halfSize.z),
+                new Vector3(-halfSize.x, -halfSize.y,  halfSize.z),
+                new Vector3( halfSize.x, -halfSize.y,  halfSize.z),
+                new Vector3( halfSize.x,  halfSize.y,  halfSize.z),
+                new Vector3(-halfSize.x,  halfSize.y,  halfSize.z) 
             };
             mesh.vertices = vertices;
             

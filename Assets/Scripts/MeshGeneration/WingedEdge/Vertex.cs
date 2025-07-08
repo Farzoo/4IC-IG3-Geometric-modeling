@@ -2,7 +2,7 @@
 using System.Linq;
 using UnityEngine;
 
-namespace WingedEdge
+namespace MeshGeneration.WingedEdge
 {
     public class Vertex
     {
@@ -43,10 +43,24 @@ namespace WingedEdge
             {
                 var start= edge;
                 var current= start;
+                const int maxEdges = 1000;
+                int count = 0;
+                
+                if (edge.startVertex != this && edge.endVertex != this)
+                {
+                    Debug.LogWarning($"Edge {edge} does not connect to vertex {this.index}.");
+                }
                 
                 do
                 {
+                    if (count >= maxEdges)
+                    {
+                        Debug.LogWarning($"Infinite loop detected in IncidentEdges enumeration for {this.index} vertex.");
+                        yield break;
+                    }
+                    
                     yield return current;
+                    count++;
                     
                     current = (current.startVertex == this)
                         ? current.startCWEdge

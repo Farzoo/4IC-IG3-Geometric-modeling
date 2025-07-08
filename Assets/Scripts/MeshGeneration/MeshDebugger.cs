@@ -79,9 +79,9 @@ public class MeshDebugger : MonoBehaviour
 
         for (int i = 0; i < t.Length; i += 3)
         {
-            DrawEdge(t[i],   t[i+1], v, M);
+            DrawEdge(t[i],t[i+1], v, M);
             DrawEdge(t[i+1], t[i+2], v, M);
-            DrawEdge(t[i+2], t[i],   v, M);
+            DrawEdge(t[i+2], t[i], v, M);
         }
     }
 
@@ -90,18 +90,17 @@ public class MeshDebugger : MonoBehaviour
         ulong key = MakeKey(a, b);
         if (!already.Add(key)) return;
 
-        int id = edgeIndexOf.TryGetValue(key, out int cached) ? cached
-                                                              : (edgeIndexOf[key] = edgeCounter++);
+        int id = edgeIndexOf.TryGetValue(key, out int cached) ? cached : (edgeIndexOf[key] = edgeCounter++);
 
         Vector3 p0 = M.MultiplyPoint3x4(v[a]);
         Vector3 p1 = M.MultiplyPoint3x4(v[b]);
 
         DrawLine(p0, p1, 3f, Color.black);
 
-        Vector3 dir  = (p0 - p1).normalized;
-        Vector3 mid  = (p0 + p1) * 0.5f;
+        Vector3 dir = (p0 - p1).normalized;
+        Vector3 mid = (p0 + p1) * 0.5f;
         Vector3 right = Quaternion.Euler(0,  arrowHeadAngle, 0) * dir;
-        Vector3 left  = Quaternion.Euler(0, -arrowHeadAngle, 0) * dir;
+        Vector3 left = Quaternion.Euler(0, -arrowHeadAngle, 0) * dir;
         DrawLine(mid, mid + right * arrowHeadLength, 3f, Color.black);
         DrawLine(mid, mid + left  * arrowHeadLength, 3f, Color.black);
 

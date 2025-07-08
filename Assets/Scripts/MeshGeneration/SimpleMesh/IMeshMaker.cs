@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace TP1
+namespace MeshGeneration.SimpleMesh
 {
     public interface IMeshMaker
     {

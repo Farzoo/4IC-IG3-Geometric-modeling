@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-namespace WingedEdge
+namespace MeshGeneration.Editor
 {
     [CustomEditor(typeof(MeshBehaviour)), CanEditMultipleObjects]
-    public class MeshBehaviourEditor : Editor
+    public class MeshBehaviourEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {
