@@ -13,13 +13,10 @@ namespace MeshGeneration.WingedEdge
         {
             index = Index;
             edge = Edge;
-            color = color;
         }
 
         public int index { get; set; }
         public WingedEdge edge { get; set; }
-        
-        public Color color { get; set; }
         
         
         // Renvoie les edges dans le sens horaire autour de la face
